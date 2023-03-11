@@ -15,6 +15,31 @@ AddressExprs = [
   'bx + si', 'bx + di', 'bp + si', 'bp + di', 'si', 'di', 'bp', 'bx'
 ]
 
+SimilarOps = {0 => :add, 5 => :sub, 7 => :cmp}
+
+DisplacementOps = {
+  0x70 => :jo,
+  0x71 => :jno,
+  0x72 => :jb,
+  0x73 => :jnb,
+  0x74 => :jz,
+  0x75 => :jnz,
+  0x76 => :jbe,
+  0x77 => :jnbe,
+  0x78 => :js,
+  0x79 => :jns,
+  0x7A => :jp,
+  0x7B => :jnp,
+  0x7C => :jl,
+  0x7D => :jnl,
+  0x7E => :jle,
+  0x7F => :jnle,
+  0xE0 => :loopnz,
+  0xE1 => :loopz,
+  0xE2 => :loop,
+  0xE3 => :jcxz,
+}
+
 def decode_rm(mod, w, rm, input)
   if mod == 0b11
     # r/m is treated as a reg field
@@ -44,6 +69,22 @@ end
 
 def read_data(w, input)
   if w == 1
+    input.read(2).unpack('<S')[0]
+  else
+    input.read(1).ord
+  end
+end
+
+def read_data_signed(w, input)
+  if w == 1
+    input.read(2).unpack('<S')[0]
+  else
+    input.read(1).unpack('c')[0]
+  end
+end
+
+def read_data_ws(w, s, input)
+  if w == 1 && s == 0
     input.read(2).unpack('<S')[0]
   else
     input.read(1).ord
@@ -90,8 +131,41 @@ def decode(input)
     else
       "mov ax, [#{addr}]"
     end
+  when (byte0 & 0b11000100) == 0   # ADD/SUB/CMP: Register/memory with register
+    byte1 = input.read(1).ord
+    op = SimilarOps.fetch(byte0 >> 3 & 7)
+    d = byte0[1]
+    w = byte0[0]
+    mod = byte1 >> 6 & 3
+    reg = byte1 >> 3 & 7
+    rm = byte1 & 7
+    op2 = RegNames.fetch(w).fetch(reg)
+    op1 = decode_rm(mod, w, rm, input)
+    dest, src = d == 1 ? [op2, op1] : [op1, op2]
+    "#{op} #{dest}, #{src}"
+  when (byte0 & 0b11000100) == 0x80  # ADD/SUB/CMP: Immediate to register/memory
+    byte1 = input.read(1).ord
+    w = byte0[0]
+    s = byte0[1]
+    op = SimilarOps.fetch(byte1 >> 3 & 7)
+    mod = byte1 >> 6 & 3
+    rm = byte1 & 7
+    op2 = decode_rm(mod, w, rm, input)
+    imm = read_data_ws(w, s, input)
+    size = ["byte ", "word "].fetch(w)
+    "#{op} #{size}#{op2}, #{imm}"
+  when (byte0 & 0b11000100) == 0x04  # ADD/SUB/CMP: Immediate to accumulator
+    w = byte0[0]
+    imm = read_data_signed(w, input)
+    op = SimilarOps.fetch(byte0 >> 3 & 7)
+    dest = %w{al ax}.fetch(w)
+    "#{op} #{dest}, #{imm}"
+  when DisplacementOps.key?(byte0)   # Conditional jumps and loops
+    op = DisplacementOps.fetch(byte0)
+    disp = input.read(1).unpack('c')[0]
+    "#{op} ($+2)+#{disp}"
   else
-    raise NotImplementedError, "byte0 = 0x%x" % byte0
+    raise NotImplementedError, "byte0 = 0x%X" % byte0
   end
 end
 
