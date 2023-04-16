@@ -11,6 +11,8 @@ class Sim
   def initialize
     @pc = 0
     @registers = [0] * 12
+    @zero_flag = false
+    @sign_flag = false
   end
 
   def reg_read_byte(index, offset)
@@ -55,11 +57,29 @@ class Sim
     inst = Sim86.decode_8086_instruction(@memory, @pc)
     p inst
 
-    if inst.fetch(:op) == :mov
+    op = inst.fetch(:op)
+    case op
+    when :mov
       value = operand_read(inst.fetch(:o2))
       p value
       operand_write(inst.fetch(:o1), value)
       p @registers
+    when :add
+      v2 = operand_read(inst.fetch(:o2))
+      v1 = operand_read(inst.fetch(:o1))
+      result = (v1 + v2) & 0xFFFF
+      @zero_flag = result == 0
+      @sign_flag = result & 0x8000 != 0
+      operand_write(inst.fetch(:o1), result)
+    when :sub, :cmp
+      v2 = operand_read(inst.fetch(:o2))
+      v1 = operand_read(inst.fetch(:o1))
+      result = (v1 - v2) & 0xFFFF
+      @zero_flag = result == 0
+      @sign_flag = result & 0x8000 != 0
+      operand_write(inst.fetch(:o1), result) if op == :sub
+    else
+      raise NotImplementedError, inst[:op].to_s
     end
 
     @pc += inst.fetch(:size)
@@ -67,6 +87,18 @@ class Sim
 
   def valid_pc?
     (0...@memory.size).include?(@pc)
+  end
+
+  def print_state
+    puts "ax: 0x%x" % @registers[0]
+    puts "bx: 0x%x" % @registers[1]
+    puts "cx: 0x%x" % @registers[2]
+    puts "dx: 0x%x" % @registers[3]
+    puts "sp: 0x%x" % @registers[4]
+    puts "bp: 0x%x" % @registers[5]
+    puts "di: 0x%x" % @registers[6]
+    puts "si: 0x%x" % @registers[7]
+    puts "Flags: %c%c" % [@zero_flag ? 'Z' : ' ', @sign_flag ? 'S' : ' ']
   end
 end
 
@@ -81,6 +113,4 @@ while sim.valid_pc?
   sim.run_instruction
 end
 
-sim.registers.each_with_index do |value, i|
-  puts "Reg %d: 0x%x" % [i, value]
-end
+sim.print_state
