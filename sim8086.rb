@@ -1,15 +1,16 @@
 # 8086 simulator homework
 # https://www.computerenhance.com/p/simulating-non-memory-movs
+# https://www.computerenhance.com/p/simulating-conditional-jumps
 
 require 'C:/Users/david/Documents/computer_enhance/perfaware/sim86/shared/contrib_ruby/sim86'
 
 class Sim
   attr_accessor :memory
-  attr_accessor :pc
+  attr_accessor :ip
   attr_accessor :registers
 
   def initialize
-    @pc = 0
+    @ip = 0
     @registers = [0] * 12
     @zero_flag = false
     @sign_flag = false
@@ -54,16 +55,15 @@ class Sim
   end
 
   def run_instruction
-    inst = Sim86.decode_8086_instruction(@memory, @pc)
-    p inst
+    puts "Run inst at ip=#{@ip}"
+    inst = Sim86.decode_8086_instruction(@memory, @ip)
 
     op = inst.fetch(:op)
+    @ip += inst.fetch(:size)
     case op
     when :mov
       value = operand_read(inst.fetch(:o2))
-      p value
       operand_write(inst.fetch(:o1), value)
-      p @registers
     when :add
       v2 = operand_read(inst.fetch(:o2))
       v1 = operand_read(inst.fetch(:o1))
@@ -78,15 +78,15 @@ class Sim
       @zero_flag = result == 0
       @sign_flag = result & 0x8000 != 0
       operand_write(inst.fetch(:o1), result) if op == :sub
+    when :jne
+      @ip += inst.fetch(:o1) if !@zero_flag
     else
       raise NotImplementedError, inst[:op].to_s
     end
-
-    @pc += inst.fetch(:size)
   end
 
-  def valid_pc?
-    (0...@memory.size).include?(@pc)
+  def valid_ip?
+    (0...@memory.size).include?(@ip)
   end
 
   def print_state
@@ -98,6 +98,10 @@ class Sim
     puts "bp: 0x%x" % @registers[5]
     puts "di: 0x%x" % @registers[6]
     puts "si: 0x%x" % @registers[7]
+    puts "cs: 0x%x" % @registers[8]
+    puts "ds: 0x%x" % @registers[9]
+    puts "ss: 0x%x" % @registers[10]
+    puts "es: 0x%x" % @registers[11]
     puts "Flags: %c%c" % [@zero_flag ? 'Z' : ' ', @sign_flag ? 'S' : ' ']
   end
 end
@@ -109,7 +113,7 @@ input_filename = ARGV.fetch(0)
 sim = Sim.new
 sim.memory = File.open(input_filename, 'rb') { |f| f.read }
 
-while sim.valid_pc?
+while sim.valid_ip?
   sim.run_instruction
 end
 
