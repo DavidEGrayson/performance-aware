@@ -1,7 +1,9 @@
 # 8086 simulator homework
 # https://www.computerenhance.com/p/simulating-non-memory-movs
+# https://www.computerenhance.com/p/simulating-add-jmp-and-cmp
 # https://www.computerenhance.com/p/simulating-conditional-jumps
 # https://www.computerenhance.com/p/simulating-memory
+# https://www.computerenhance.com/p/simulating-real-programs (challenge completed)
 
 require 'C:/Users/david/Documents/computer_enhance/perfaware/sim86/shared/contrib_ruby/sim86'
 
@@ -21,6 +23,10 @@ class Sim
   def load_program(program)
     @program_end = program.size
     @memory = program.ljust(64 * 1024, "\x00")
+  end
+
+  def save_image(filename)
+    File.open(filename, 'wb') { |f| f.write @memory[0x100, 0x4000] }
   end
 
   def reg_read_byte(index, offset)
@@ -109,6 +115,9 @@ class Sim
       operand_write(inst.fetch(:o1), result) if op == :sub
     when :jne
       @ip += inst.fetch(:o1) if !@zero_flag
+    when :loop
+      @registers[2] -= 1
+      @ip += inst.fetch(:o1) if @registers[2] != 0
     else
       raise NotImplementedError, "Unimplemented op #{op} at ip=#{orig_ip}"
     end
@@ -147,3 +156,4 @@ while sim.valid_ip?
 end
 
 sim.print_state
+sim.save_image 'output.data'
