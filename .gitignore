@@ -1,2 +1,4 @@
 listing*
 *.pdf
+haversine.f64
+points.json
