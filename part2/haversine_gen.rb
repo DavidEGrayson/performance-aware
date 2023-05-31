@@ -2,7 +2,7 @@
 
 require 'json'
 
-EarthRadius = 6371
+EarthRadius = 6372.8
 
 def square(x)
   x * x
@@ -41,7 +41,7 @@ count.times do |n|
     x0: rand(-180.0...180.0), y0: rand(-90.0...90.0),
     x1: rand(-180.0...180.0), y1: rand(-90.0...90.0),
   }
-  point_file.puts '  ' + JSON.dump(pair)
+  point_file.puts '  ' + JSON.dump(pair) + ','
   distance = haversine_distance(pair)
   answer_file.write([distance].pack('d'))
   total += distance
