@@ -6,7 +6,10 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include <profileapi.h>
+
 #include "json.h"
+#include "timer.h"
 
 static double square(double x)
 {
@@ -41,9 +44,13 @@ static double haversine_distance(double x0, double y0, double x1, double y1)
 
 int main()
 {
+  Profile profile;
+  profile_start(&profile);
   FILE * file = fopen("points.json", "r");
   Json * data = json_parse_file(file);
+  profile_lap(&profile, "JSON parse");
   Json * pairs = json_object_lookup(data, "pairs");
+  profile_lap(&profile, "Look up pairs");
   if (pairs == NULL)
   {
     fprintf(stderr, "Error: Cannot find 'pairs' in file.\n");
@@ -62,10 +69,12 @@ int main()
     double y0 = json_object_lookup(pair, "y0")->number;
     double x1 = json_object_lookup(pair, "x1")->number;
     double y1 = json_object_lookup(pair, "y1")->number;
-    printf("%20.15lf %20.15lf %20.15lf %20.15lf\n", x0, y0, x1, y1);
+    //printf("%20.15lf %20.15lf %20.15lf %20.15lf\n", x0, y0, x1, y1);
     sum += haversine_distance(x0, y0, x1, y1);
     count += 1;
   }
   double average = sum / count;
+  profile_lap(&profile, "Average");
   printf("average: %20.15lf\n", average);
+  profile_print(&profile);
 }

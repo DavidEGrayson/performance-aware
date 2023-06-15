@@ -89,9 +89,9 @@ Json * json_parse_file(FILE * file)
       }
     }
     *p = 0;
-    ret->number = atof(float_string);
-    printf("atof input: %s\n", float_string);
-    printf("    output: %-.15lf\n", ret->number);
+    ret->number = strtod(float_string, NULL);
+    //printf("atof input: %s\n", float_string);
+    //printf("    output: %-.15lf\n", ret->number);
 #else
     // Inaccurate attempt to parse floats
     bool negative = false;
@@ -138,7 +138,6 @@ Json * json_parse_file(FILE * file)
   else if (c == '{')
   {
     ret->type = JsonObject;
-    printf("Begin the object\n"); fflush(stdout);
     Json ** tip = &ret->first;
     while (true)
     {
@@ -178,7 +177,6 @@ Json * json_parse_file(FILE * file)
   }
   else if (c == '[')
   {
-    printf("Begin the array\n"); fflush(stdout);
     ret->type = JsonArray;
     Json ** tip = &ret->first;
     while (true)
@@ -189,7 +187,6 @@ Json * json_parse_file(FILE * file)
         free(element);
         break;
       }
-      printf("Got type %d\n", element->type);  fflush(stdout);
       assert(json_is_value(element->type));
       *tip = element;
       tip = &element->next;
