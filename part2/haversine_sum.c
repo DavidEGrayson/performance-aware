@@ -8,8 +8,8 @@
 
 #include <profileapi.h>
 
-#include "json.h"
 #include "timer.h"
+#include "json.h"
 
 static double square(double x)
 {
@@ -44,12 +44,18 @@ static double haversine_distance(double x0, double y0, double x1, double y1)
 
 int main()
 {
-  profile_start();
+  profile_init();
+  profile_block("Total");
+
   FILE * file = fopen("points.json", "r");
+  profile_block("JSON parse");
   Json * data = json_parse_file(file);
-  profile_lap("JSON parse");
+  profile_block_done();
+
+  profile_block("Look up pairs");
   Json * pairs = json_object_lookup(data, "pairs");
-  profile_lap("Look up pairs");
+  profile_block_done();
+
   if (pairs == NULL)
   {
     fprintf(stderr, "Error: Cannot find 'pairs' in file.\n");
@@ -60,6 +66,8 @@ int main()
     fprintf(stderr, "Error: 'pairs' is not an array.\n");
     return 1;
   }
+
+  profile_block("Average");
   double sum = 0;
   size_t count = 0;
   for (Json * pair = pairs->first; pair; pair = pair->next)
@@ -73,7 +81,9 @@ int main()
     count += 1;
   }
   double average = sum / count;
-  profile_lap("Average");
+  profile_block_done();
+
+  profile_block_done();
   printf("average: %20.15lf\n", average);
   profile_print();
 }
