@@ -44,13 +44,12 @@ static double haversine_distance(double x0, double y0, double x1, double y1)
 
 int main()
 {
-  Profile profile;
-  profile_start(&profile);
+  profile_start();
   FILE * file = fopen("points.json", "r");
   Json * data = json_parse_file(file);
-  profile_lap(&profile, "JSON parse");
+  profile_lap("JSON parse");
   Json * pairs = json_object_lookup(data, "pairs");
-  profile_lap(&profile, "Look up pairs");
+  profile_lap("Look up pairs");
   if (pairs == NULL)
   {
     fprintf(stderr, "Error: Cannot find 'pairs' in file.\n");
@@ -74,7 +73,7 @@ int main()
     count += 1;
   }
   double average = sum / count;
-  profile_lap(&profile, "Average");
+  profile_lap("Average");
   printf("average: %20.15lf\n", average);
-  profile_print(&profile);
+  profile_print();
 }
