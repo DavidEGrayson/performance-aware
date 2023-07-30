@@ -6,6 +6,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include <windows.h>
 #include <profileapi.h>
 
 #include "timer.h"
@@ -50,6 +51,16 @@ int main()
   FILE * file = fopen("points.json", "r");
   profile_block("JSON parse");
   Json * data = json_parse_file(file);
+
+  // Simulate somer recursive blocks
+  for (size_t i = 0; i < 4; i++)
+  {
+    profile_block("Sleep");
+    profile_block("Sleep2");
+  }
+  Sleep(100);
+  for (size_t i = 0; i < 8; i++) { profile_block_done(); }
+
   profile_block_done();
 
   profile_block("Look up pairs");

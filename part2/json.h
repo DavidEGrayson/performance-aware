@@ -70,8 +70,7 @@ Json * json_parse_file(FILE * file)
   else if (c == '-' || (c >= '0' && c <= '9'))
   {
     ret->type = JsonNumber;
-#if 1
-    // WARNING: buffer overflow below is floats are too long
+    // WARNING: buffer overflow below if floats are too long
     char float_string[256];
     char * p = float_string;
     float_string[0] = c;
@@ -90,50 +89,6 @@ Json * json_parse_file(FILE * file)
     }
     *p = 0;
     ret->number = strtod(float_string, NULL);
-    //printf("atof input: %s\n", float_string);
-    //printf("    output: %-.15lf\n", ret->number);
-#else
-    // Inaccurate attempt to parse floats
-    bool negative = false;
-    float significance = 1;
-    bool after_decimal_point = false;
-    ret->number = 0;
-    if (c == '-')
-    {
-      negative = true;
-    }
-    else
-    {
-      ret->number = c - '0';
-    }
-    while (true)
-    {
-      c = next_char(file);
-      if (c >= '0' && c <= '9')
-      {
-        if (after_decimal_point)
-        {
-          significance /= 10;
-          ret->number += significance * (c - '0');
-        }
-        else
-        {
-          ret->number = ret->number * 10 + (c - '0');
-        }
-      }
-      else if (c == '.')
-      {
-        assert(!after_decimal_point);
-        after_decimal_point = true;
-      }
-      else
-      {
-        unread_char(file);
-        break;
-      }
-    }
-    if (negative) { ret->number *= -1; }
-#endif
   }
   else if (c == '{')
   {
