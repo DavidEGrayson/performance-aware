@@ -52,6 +52,8 @@ typedef struct ProfileFrame
 
 typedef struct Profile
 {
+  uint64_t start_tsc;
+  uint64_t end_tsc;
   ProfileBlock blocks[PROFILE_BLOCK_CAPACITY];
   ProfileFrame frames[64];
   size_t block_count;
@@ -64,6 +66,7 @@ void profile_init()
 {
   Profile * profile = &global_profile;
   memset(profile, 0, sizeof(*profile));
+  profile->start_tsc = __rdtsc();
 }
 
 size_t profile_next_block_index()
@@ -123,14 +126,24 @@ void profile_block_done()
   }
 }
 
+void profile_end()
+{
+  Profile * profile = &global_profile;
+  profile->end_tsc = __rdtsc();
+}
+
 void profile_print()
 {
   Profile * profile = &global_profile;
+
+  if (!profile->end_tsc) { profile_end(); }
+
   assert(profile->frame_count == 0);
 
   if (tsc_frequency == 0) { measure_tsc_frequency(); }
 
-  uint64_t total_time = profile->frames[0].block->total_time;
+  uint64_t total_time = profile->end_tsc - profile->start_tsc;
+  printf("Total run time:                    %10llu us\n", tsc_to_us(total_time));
   for (size_t i = 0; i < PROFILE_BLOCK_CAPACITY; i++)
   {
     ProfileBlock * block = &profile->blocks[i];

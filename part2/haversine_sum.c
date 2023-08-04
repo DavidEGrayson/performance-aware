@@ -46,7 +46,6 @@ static double haversine_distance(double x0, double y0, double x1, double y1)
 int main()
 {
   profile_init();
-  profile_block("Total");
 
   FILE * file = fopen("points.json", "r");
   profile_block("JSON parse");
@@ -94,7 +93,6 @@ int main()
   double average = sum / count;
   profile_block_done();
 
-  profile_block_done();
   printf("average: %20.15lf\n", average);
   profile_print();
 }
