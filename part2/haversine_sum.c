@@ -9,7 +9,7 @@
 #include <windows.h>
 #include <profileapi.h>
 
-#include "timer.h"
+#include "profile.h"
 #include "json.h"
 
 static double square(double x)
