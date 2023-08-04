@@ -1,6 +1,7 @@
 uint64_t tsc_frequency;
+float tsc_units_in_us;
 
-void timer_init()
+void measure_tsc_frequency()
 {
   const unsigned int k = 10;  // We measure for 1/k seconds
   LARGE_INTEGER li;
@@ -18,6 +19,12 @@ void timer_init()
     }
   }
   tsc_frequency = (__rdtsc() - tsc_start) * k;
+  tsc_units_in_us = 1e6 / tsc_frequency;
+}
+
+uint64_t tsc_to_us(uint64_t tsc)
+{
+  return tsc_units_in_us * tsc;
 }
 
 // Represents a region in the code we want to profile.
@@ -55,7 +62,6 @@ Profile global_profile;
 
 void profile_init()
 {
-  if (tsc_frequency == 0) { timer_init(); }
   Profile * profile = &global_profile;
   memset(profile, 0, sizeof(*profile));
 }
@@ -121,6 +127,9 @@ void profile_print()
 {
   Profile * profile = &global_profile;
   assert(profile->frame_count == 0);
+
+  if (tsc_frequency == 0) { measure_tsc_frequency(); }
+
   uint64_t total_time = profile->frames[0].block->total_time;
   for (size_t i = 0; i < PROFILE_BLOCK_CAPACITY; i++)
   {
@@ -128,7 +137,8 @@ void profile_print()
     assert(block->frame_count == 0);
     if (block->name == NULL) { continue; }
     float percent = 100.0 * block->exclusive_time / total_time;
-    printf("  %-18s %10llu %10llu (%.1f%%)\n", block->name,
-      block->total_time, block->exclusive_time, percent);
+    printf("  %-18s %10llu us %10llu us (%.1f%%)\n", block->name,
+      tsc_to_us(block->total_time),
+      tsc_to_us(block->exclusive_time), percent);
   }
 }
