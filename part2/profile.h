@@ -27,6 +27,8 @@ uint64_t tsc_to_us(uint64_t tsc)
   return tsc_units_in_us * tsc;
 }
 
+#ifdef PROFILE
+
 // Represents a region in the code we want to profile.
 typedef struct ProfileBlock
 {
@@ -50,14 +52,18 @@ typedef struct ProfileFrame
 
 #define PROFILE_BLOCK_CAPACITY 64
 
+#endif
+
 typedef struct Profile
 {
   uint64_t start_tsc;
   uint64_t end_tsc;
+#ifdef PROFILE
   ProfileBlock blocks[PROFILE_BLOCK_CAPACITY];
   ProfileFrame frames[64];
   size_t block_count;
   size_t frame_count;
+#endif
 } Profile;
 
 Profile global_profile;
@@ -69,6 +75,7 @@ void profile_init()
   profile->start_tsc = __rdtsc();
 }
 
+#ifdef PROFILE
 size_t profile_next_block_index()
 {
   Profile * profile = &global_profile;
@@ -125,6 +132,10 @@ void profile_block_done()
     frame->block->total_time += total_time;
   }
 }
+#else
+#define profile_block(name)
+#define profile_block_done()
+#endif
 
 void profile_end()
 {
@@ -138,12 +149,12 @@ void profile_print()
 
   if (!profile->end_tsc) { profile_end(); }
 
-  assert(profile->frame_count == 0);
-
   if (tsc_frequency == 0) { measure_tsc_frequency(); }
 
   uint64_t total_time = profile->end_tsc - profile->start_tsc;
   printf("Total run time:                    %10llu us\n", tsc_to_us(total_time));
+#if PROFILE
+  assert(profile->frame_count == 0);
   for (size_t i = 0; i < PROFILE_BLOCK_CAPACITY; i++)
   {
     ProfileBlock * block = &profile->blocks[i];
@@ -154,4 +165,5 @@ void profile_print()
       tsc_to_us(block->total_time),
       tsc_to_us(block->exclusive_time), percent);
   }
+#endif
 }
