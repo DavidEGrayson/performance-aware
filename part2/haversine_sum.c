@@ -51,15 +51,6 @@ int main()
   profile_block("JSON parse");
   Json * data = json_parse_file(file);
 
-  // Simulate somer recursive blocks
-  for (size_t i = 0; i < 4; i++)
-  {
-    profile_block("Sleep");
-    profile_block("Sleep2");
-  }
-  Sleep(100);
-  for (size_t i = 0; i < 8; i++) { profile_block_done(); }
-
   profile_block_done();
 
   profile_block("Look up pairs");
@@ -93,6 +84,10 @@ int main()
   double average = sum / count;
   profile_block_done();
 
+  profile_block("Print results");
+  printf("pairs: %llu\n", count);
   printf("average: %20.15lf\n", average);
+  profile_block_done();
+
   profile_print();
 }

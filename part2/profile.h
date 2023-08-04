@@ -33,6 +33,7 @@ uint64_t tsc_to_us(uint64_t tsc)
 typedef struct ProfileBlock
 {
   const char * name;
+
   // Total time this block was on the stack.
   uint64_t total_time;
 
@@ -41,6 +42,10 @@ typedef struct ProfileBlock
 
   // Number of frames for this block currently on the stack.
   size_t frame_count;
+
+  // Total number of times we entered this block.
+  size_t entrance_count;
+
 } ProfileBlock;
 
 typedef struct ProfileFrame
@@ -91,11 +96,12 @@ void profile_block_start(const char * name, size_t block_index)
   assert(block_index < PROFILE_BLOCK_CAPACITY);
   ProfileBlock * block = &profile->blocks[block_index];
   block->name = name;
+  block->entrance_count++;
+  block->frame_count++;
   profile->frames[profile->frame_count++] = (struct ProfileFrame){
     .start_tsc = __rdtsc(),
     .block = block,
   };
-  block->frame_count++;
 }
 
 // This defintion would usually work, but it wouldn't work if there are multiple
@@ -161,9 +167,12 @@ void profile_print()
     assert(block->frame_count == 0);
     if (block->name == NULL) { continue; }
     float percent = 100.0 * block->exclusive_time / total_time;
-    printf("  %-18s %10llu us %10llu us (%.1f%%)\n", block->name,
+    printf("  %-18s %10llu %10llu us %10llu us (%.1f%%)\n",
+      block->name,
+      block->entrance_count,
       tsc_to_us(block->total_time),
-      tsc_to_us(block->exclusive_time), percent);
+      tsc_to_us(block->exclusive_time),
+      percent);
   }
 #endif
 }

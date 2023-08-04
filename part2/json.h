@@ -33,28 +33,36 @@ bool json_is_value(enum JsonType type)
 
 char next_char(FILE * file)
 {
+  profile_block("next_char");
   char c;
   size_t result = fread(&c, 1, 1, file);
   assert(result == 1);
+  profile_block_done();
   return c;
 }
 
 void unread_char(FILE * file)
 {
+  profile_block("uread_char");
   fseek(file, -1, SEEK_CUR);
+  profile_block_done();
 }
 
 Json * json_parse_file(FILE * file)
 {
+  profile_block("json_parse_file");
   Json * ret = calloc(sizeof(Json), 1);
   char c;
+  profile_block("jpf - skip spaces");
   do
   {
     c = next_char(file);
   }
   while (c == ' ' || c == '\n');
+  profile_block_done();
   if (c == '"')
   {
+    profile_block("jpf - string");
     ret->type = JsonString;
     ret->string = malloc(256);
     char * p = ret->string;
@@ -66,9 +74,11 @@ Json * json_parse_file(FILE * file)
       *p++ = c;
     }
     *p = 0;
+    profile_block_done();
   }
   else if (c == '-' || (c >= '0' && c <= '9'))
   {
+    profile_block("jpf - number");
     ret->type = JsonNumber;
     // WARNING: buffer overflow below if floats are too long
     char float_string[256];
@@ -88,10 +98,14 @@ Json * json_parse_file(FILE * file)
       }
     }
     *p = 0;
+    profile_block("jpf - strtod");
     ret->number = strtod(float_string, NULL);
+    profile_block_done();
+    profile_block_done();
   }
   else if (c == '{')
   {
+    profile_block("jpf - object");
     ret->type = JsonObject;
     Json ** tip = &ret->first;
     while (true)
@@ -129,9 +143,11 @@ Json * json_parse_file(FILE * file)
         assert(0);
       }
     }
+    profile_block_done();
   }
   else if (c == '[')
   {
+    profile_block("jpf - array");
     ret->type = JsonArray;
     Json ** tip = &ret->first;
     while (true)
@@ -161,6 +177,7 @@ Json * json_parse_file(FILE * file)
         assert(0);
       }
     }
+    profile_block_done();
   }
   else if (c == ':')
   {
@@ -183,6 +200,7 @@ Json * json_parse_file(FILE * file)
     fprintf(stderr, "Unrecognized starting char: %c\n", c);
     assert(0);
   }
+  profile_block_done();
   return ret;
 }
 
