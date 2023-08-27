@@ -82,6 +82,7 @@ int main()
     count += 1;
   }
   double average = sum / count;
+  profile_record_bytes(count * 4 * sizeof(double));
   profile_block_done();
 
   profile_block("Print results");

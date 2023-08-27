@@ -37,6 +37,7 @@ char next_char(FILE * file)
   char c;
   size_t result = fread(&c, 1, 1, file);
   assert(result == 1);
+  profile_record_bytes(1);
   profile_block_done();
   return c;
 }
@@ -45,6 +46,7 @@ void unread_char(FILE * file)
 {
   profile_block("uread_char");
   fseek(file, -1, SEEK_CUR);
+  profile_record_bytes(1);
   profile_block_done();
 }
 

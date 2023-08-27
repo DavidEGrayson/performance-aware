@@ -27,6 +27,14 @@ uint64_t tsc_to_us(uint64_t tsc)
   return tsc_units_in_us * tsc;
 }
 
+// Calculate bandwidth in gigabytes per second.
+// gigabytes / second = byte_count/(1<<30) / (time_in_us / 1000000)
+// We reduce both constants by a factor of 64 to help avoid overflow.
+double calculate_gib_per_s(uint64_t byte_count, uint64_t tsc)
+{
+  return (double)byte_count * 15625 / ((1 << 24) * tsc_units_in_us * tsc);
+}
+
 #ifdef PROFILE
 
 // Represents a region in the code we want to profile.
@@ -45,6 +53,9 @@ typedef struct ProfileBlock
 
   // Total number of times we entered this block.
   size_t entrance_count;
+
+  // Total number of bytes this block processed.
+  size_t byte_count;
 
 } ProfileBlock;
 
@@ -104,6 +115,13 @@ void profile_block_start(const char * name, size_t block_index)
   };
 }
 
+void profile_record_bytes(size_t bytes)
+{
+  Profile * profile = &global_profile;
+  assert(profile->frame_count);
+  profile->frames[profile->frame_count - 1].block->byte_count += bytes;
+}
+
 // This defintion would usually work, but it wouldn't work if there are multiple
 // compilation units or if some other part of the code runs __COUNTER__
 // hundreds of times.
@@ -140,6 +158,7 @@ void profile_block_done()
 }
 #else
 #define profile_block(name)
+#define profile_record_bytes(bytes)
 #define profile_block_done()
 #endif
 
@@ -158,7 +177,7 @@ void profile_print()
   if (tsc_frequency == 0) { measure_tsc_frequency(); }
 
   uint64_t total_time = profile->end_tsc - profile->start_tsc;
-  printf("Total run time:                    %10llu us\n", tsc_to_us(total_time));
+  printf("Total run time:                 %10llu us\n", tsc_to_us(total_time));
 #if PROFILE
   assert(profile->frame_count == 0);
   for (size_t i = 0; i < PROFILE_BLOCK_CAPACITY; i++)
@@ -167,12 +186,19 @@ void profile_print()
     assert(block->frame_count == 0);
     if (block->name == NULL) { continue; }
     float percent = 100.0 * block->exclusive_time / total_time;
-    printf("  %-18s %10llu %10llu us %10llu us (%.1f%%)\n",
+    printf("  %-18s %10llu %10llu us %10llu us (%4.1f%%)",
       block->name,
       block->entrance_count,
       tsc_to_us(block->total_time),
       tsc_to_us(block->exclusive_time),
       percent);
+
+    if (block->byte_count)
+    {
+      printf(" %4.2f GiB/s", calculate_gib_per_s(block->byte_count,
+        block->total_time));
+    }
+    printf("\n");
   }
 #endif
 }
