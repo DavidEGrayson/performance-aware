@@ -1,3 +1,8 @@
+#include <stdbool.h>
+#include <stdint.h>
+#include <stdio.h>
+#include <windows.h>
+
 uint64_t tsc_frequency;
 float tsc_units_in_us;
 
@@ -201,4 +206,52 @@ void profile_print()
     printf("\n");
   }
 #endif
+}
+
+//// Repeat testing ////////////////////////////////////////////////////////////
+
+typedef struct RepeatTest
+{
+  bool timing;
+  uint64_t best_time;
+  uint64_t best_time_tsc;
+  uint64_t start_tsc;
+} RepeatTest;
+
+struct RepeatTest global_rt;
+
+bool repeat_testing_continue()
+{
+  RepeatTest * rt = &global_rt;
+  if (rt->timing)
+  {
+    uint64_t stop_tsc = __rdtsc();
+    uint64_t time = stop_tsc - rt->start_tsc;
+    if (time < rt->best_time)
+    {
+      rt->best_time = time;
+      rt->best_time_tsc = stop_tsc;
+      printf("Maybe best time: %llu us\n", tsc_to_us(rt->best_time));
+    }
+    else if (tsc_to_us(stop_tsc - rt->best_time_tsc) > 10e6)
+    {
+      // 10 seconds have passed since the best time we recorded.
+      // Time to stop.
+      rt->timing = false;
+      printf("Best time: %llu us\n", tsc_to_us(rt->best_time));
+    }
+  }
+  else if (!rt->timing)
+  {
+    // Setup
+    if (tsc_frequency == 0) { measure_tsc_frequency(); }
+    rt->best_time = ~(uint64_t)0;
+    rt->timing = true;
+  }
+
+  if (rt->timing)
+  {
+    rt->start_tsc = __rdtsc();
+  }
+  return rt->timing;
 }

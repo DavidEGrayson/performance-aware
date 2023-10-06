@@ -88,7 +88,7 @@ Json * json_parse_core(JsonInputBuffer * buf)
     while (true)
     {
       c = next_char(buf);
-      if (c == '-' || (c >= '0' && c <= '9') || c == '.')
+      if (c == '-' || (c >= '0' && c <= '9') || c == '.' || c == 'e')
       {
         *p++ = c;
       }
@@ -216,7 +216,6 @@ Json * json_parse_file(FILE * file)
 
   profile_block("jpf - fread");
   size_t bytes_read = fread(data, 1, file_size, file);
-  assert(bytes_read <= file_size);  // line ending conversions make these differ
   profile_record_bytes(bytes_read);
   profile_block_done();
 
