@@ -231,7 +231,7 @@ bool repeat_testing_continue()
     {
       rt->best_time = time;
       rt->best_time_tsc = stop_tsc;
-      printf("Maybe best time: %llu us\n", tsc_to_us(rt->best_time));
+      //printf("Maybe best time: %llu us\n", tsc_to_us(rt->best_time));
     }
     else if (tsc_to_us(stop_tsc - rt->best_time_tsc) > 10e6)
     {
