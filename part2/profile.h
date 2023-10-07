@@ -2,6 +2,7 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <windows.h>
+#include <psapi.h>
 
 uint64_t tsc_frequency;
 float tsc_units_in_us;
@@ -206,6 +207,23 @@ void profile_print()
     printf("\n");
   }
 #endif
+}
+
+//// Page faults ///////////////////////////////////////////////////////////////
+
+HANDLE metrics_handle = INVALID_HANDLE_VALUE;
+
+uint64_t get_total_page_faults()
+{
+  if (metrics_handle == INVALID_HANDLE_VALUE)
+  {
+    metrics_handle = OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ,
+      false, GetCurrentProcessId());
+  }
+
+  PROCESS_MEMORY_COUNTERS_EX mc = { .cb = sizeof(mc) };
+  GetProcessMemoryInfo(metrics_handle, (void *)&mc, sizeof(mc));
+  return mc.PageFaultCount;
 }
 
 //// Repeat testing ////////////////////////////////////////////////////////////
