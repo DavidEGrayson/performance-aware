@@ -1,11 +1,11 @@
 #!/usr/bin/bash -ue
 
-gcc -Wall repeat_fread.c -o repeat_fread
+gcc -g -Og -Wall repeat_write_bytes.c -o repeat_write_bytes
 
 # gcc -g -Wall haversine_sum.c -o haversine_sum
-gcc -g -Wall haversine_sum.c -DPROFILE -o haversine_sum_p
+#gcc -g -Wall haversine_sum.c -DPROFILE -o haversine_sum_p
 
 #echo No profiler
 #./haversine_sum
 #echo
-./haversine_sum_p
+#./haversine_sum_p

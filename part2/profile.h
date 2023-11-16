@@ -238,38 +238,40 @@ typedef struct RepeatTest
 
 struct RepeatTest global_rt;
 
-bool repeat_testing_continue()
+void repeat_test_init()
 {
   RepeatTest * rt = &global_rt;
-  if (rt->timing)
-  {
-    uint64_t stop_tsc = __rdtsc();
-    uint64_t time = stop_tsc - rt->start_tsc;
-    if (time < rt->best_time)
-    {
-      rt->best_time = time;
-      rt->best_time_tsc = stop_tsc;
-      //printf("Maybe best time: %llu us\n", tsc_to_us(rt->best_time));
-    }
-    else if (tsc_to_us(stop_tsc - rt->best_time_tsc) > 10e6)
-    {
-      // 10 seconds have passed since the best time we recorded.
-      // Time to stop.
-      rt->timing = false;
-      printf("Best time: %llu us\n", tsc_to_us(rt->best_time));
-    }
-  }
-  else if (!rt->timing)
-  {
-    // Setup
-    if (tsc_frequency == 0) { measure_tsc_frequency(); }
-    rt->best_time = ~(uint64_t)0;
-    rt->timing = true;
-  }
+  if (tsc_frequency == 0) { measure_tsc_frequency(); }
+  *rt = (RepeatTest) {
+    .best_time = ~(uint64_t)0,
+    .best_time_tsc = __rdtsc(),
+  };
+}
 
-  if (rt->timing)
+// Returns true if less than 10 seconds have passed since the best time we
+// recorded.
+bool repeat_test_continue()
+{
+  RepeatTest * rt = &global_rt;
+  return tsc_to_us(__rdtsc() - rt->best_time_tsc) < 10000000;
+}
+
+void repeat_test_sample_start()
+{
+  RepeatTest * rt = &global_rt;
+  rt->start_tsc = __rdtsc();
+}
+
+void repeat_test_sample_end()
+{
+  RepeatTest * rt = &global_rt;
+
+  uint64_t stop_tsc = __rdtsc();
+  uint64_t time = stop_tsc - rt->start_tsc;
+  if (time < rt->best_time)
   {
-    rt->start_tsc = __rdtsc();
+    rt->best_time = time;
+    rt->best_time_tsc = stop_tsc;
+    //printf("Maybe best time: %llu us\n", tsc_to_us(rt->best_time));
   }
-  return rt->timing;
 }
