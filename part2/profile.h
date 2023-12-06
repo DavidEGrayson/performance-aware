@@ -1,3 +1,8 @@
+// Note: For cycle-accurate profiling results on a chip that has
+// Intel Turbo Boost, set the Windows "Maximum Processor State" power setting
+// to 99% and don't interact with other applications while running the tests
+// (interacting with Google Chrome seems to enable boosting).
+
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
