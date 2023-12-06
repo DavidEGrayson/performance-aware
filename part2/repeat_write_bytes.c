@@ -1,5 +1,7 @@
 #include "profile.h"
 
+void mov_all_bytes_asm(unsigned int count, void * data);
+
 int main()
 {
   repeat_test_init();
@@ -11,10 +13,11 @@ int main()
   while (repeat_test_continue())
   {
     repeat_test_sample_start();
-    for (size_t i = 0; i < data_size; i++)
-    {
-      data[i] = i;
-    }
+    mov_all_bytes_asm(data_size, data);
+    // for (size_t i = 0; i < data_size; i++)
+    // {
+    //   data[i] = i;
+    // }
     repeat_test_sample_end();
   }
   printf("Best time: %llu cycles\n", global_rt.best_time);
