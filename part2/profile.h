@@ -255,12 +255,12 @@ void repeat_test_init()
   };
 }
 
-// Returns true if less than 10 seconds have passed since the best time we
+// Returns true if less than 3 seconds have passed since the best time we
 // recorded.
 bool repeat_test_continue()
 {
   RepeatTest * rt = &global_rt;
-  return tsc_to_us(__rdtsc() - rt->best_time_tsc) < 10000000;
+  return tsc_to_us(__rdtsc() - rt->best_time_tsc) < 3000000;
 }
 
 void repeat_test_sample_start()
