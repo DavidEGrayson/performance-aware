@@ -1,7 +1,10 @@
 #!/usr/bin/bash -ue
 
-nasm -f win64 rw_port_tester.asm -o rw_port_tester.obj
-gcc -g -Og -Wall rw_port_tester.c rw_port_tester.obj -o rw_port_tester
+nasm -f win64 cache_tester.asm -o cache_tester.obj
+gcc -g -Og -Wall cache_tester.c cache_tester.obj -o cache_tester
+
+#nasm -f win64 rw_port_tester.asm -o rw_port_tester.obj
+#gcc -g -Og -Wall rw_port_tester.c rw_port_tester.obj -o rw_port_tester
 
 # nasm -f win64 write_bytes.asm -o write_bytes.obj
 # gcc -g -Og -Wall repeat_write_bytes.c write_bytes.obj -o repeat_write_bytes
