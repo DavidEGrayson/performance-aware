@@ -1,8 +1,9 @@
 // Results on David's 2.9 GHz computer:
 //
-// Small cache: 32 KiB,   104 GiB/s  (slightly more than 2 reads per cycle, what we expect)
-// Big cache: 4MB or 8MB, 57 GiB/s
-// Memory:                16 GiB/s
+// Small cache: 32 KiB,   121 GiB/s  (slightly more than 2 reads per cycle, what we expect)
+// Medium cache: 256 KB,  59 GiB/s
+// Big cache: 4MB or 8MB, 50 GiB/s
+// Memory:                18 GiB/s
 
 
 #include "profile.h"

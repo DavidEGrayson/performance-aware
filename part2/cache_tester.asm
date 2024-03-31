@@ -23,7 +23,11 @@ loop:
   movdqu xmm1, [r10 + 16]
   movdqu xmm2, [r10 + 32]
   movdqu xmm3, [r10 + 48]
-  add r9, 64
-  sub rcx, 64
+  movdqu xmm0, [r10 + 64]
+  movdqu xmm1, [r10 + 80]
+  movdqu xmm2, [r10 + 96]
+  movdqu xmm3, [r10 + 112]
+  add r9, 128
+  sub rcx, 128
   jnle loop
   ret
