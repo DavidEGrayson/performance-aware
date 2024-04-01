@@ -1,7 +1,9 @@
 #!/usr/bin/bash -ue
 
-nasm -f win64 cache_tester.asm -o cache_tester.obj
-gcc -g -Og -Wall cache_tester.c cache_tester.obj -o cache_tester
+gcc -g -Og -Wall store_latency.c -o store_latency
+
+#nasm -f win64 cache_tester.asm -o cache_tester.obj
+#gcc -g -Og -Wall cache_tester.c cache_tester.obj -o cache_tester
 
 #nasm -f win64 rw_port_tester.asm -o rw_port_tester.obj
 #gcc -g -Og -Wall rw_port_tester.c rw_port_tester.obj -o rw_port_tester

@@ -241,6 +241,8 @@ typedef struct RepeatTest
   uint64_t best_time;
   uint64_t best_time_tsc;
   uint64_t start_tsc;
+  size_t test_count;
+  uint64_t first_times[4];
 } RepeatTest;
 
 struct RepeatTest global_rt;
@@ -281,4 +283,9 @@ void repeat_test_sample_end()
     rt->best_time_tsc = stop_tsc;
     //printf("Maybe best time: %llu us\n", tsc_to_us(rt->best_time));
   }
+  if (rt->test_count < 4)
+  {
+    rt->first_times[rt->test_count] = time;
+  }
+  rt->test_count++;
 }
