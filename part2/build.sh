@@ -1,6 +1,6 @@
 #!/usr/bin/bash -ue
 
-gcc -g -Og -Wall store_latency.c -o store_latency
+gcc -g -O2 -Wall store_latency.c -o store_latency
 
 #nasm -f win64 cache_tester.asm -o cache_tester.obj
 #gcc -g -Og -Wall cache_tester.c cache_tester.obj -o cache_tester

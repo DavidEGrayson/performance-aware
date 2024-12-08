@@ -111,7 +111,6 @@ static void repeat_test_sample_end()
   {
     rt->best_time = time;
     rt->best_time_tsc = stop_tsc;
-    //printf("Maybe best time: %llu us\n", tsc_to_us(rt->best_time));
   }
   if (rt->test_count < 4)
   {
@@ -124,7 +123,7 @@ static void repeat_test_sample_end()
 
 //// Main code /////////////////////////////////////////////////////////////////
 
-#define SIZE 10000
+#define SIZE 1000
 
 typedef struct Struct {
     int32_t a, b, c;
@@ -142,10 +141,26 @@ void __attribute__((noinline)) do_work(const Struct * data,
   }
 }
 
+void __attribute__((noinline)) do_work_64(const Struct * data,
+  int32_t * a, int32_t * b, int32_t * c)
+{
+  const Struct * src = data;
+  uint64_t * a_ptr = (uint64_t *)a;
+  uint64_t * b_ptr = (uint64_t *)b;
+  uint64_t * c_ptr = (uint64_t *)c;
+  for (size_t i = 0; i < SIZE; i += 2, a_ptr++, b_ptr++, c_ptr++, src += 2)
+  {
+    *a_ptr = src[0].a | (uint64_t)(uint32_t)src[1].a << 32;
+    *b_ptr = src[0].b | (uint64_t)(uint32_t)src[1].b << 32;
+    *c_ptr = src[0].c | (uint64_t)(uint32_t)src[1].c << 32;
+  }
+}
+
 static inline void perform_repeat_test()
 {
   const size_t data_length = SIZE * sizeof(Struct);
   Struct * data = malloc(data_length);
+  memset(data, 0xAA, data_length);
   int32_t * a = malloc(SIZE * sizeof(int32_t));
   int32_t * b = malloc(SIZE * sizeof(int32_t));
   int32_t * c = malloc(SIZE * sizeof(int32_t));
@@ -154,7 +169,8 @@ static inline void perform_repeat_test()
   while (repeat_test_continue())
   {
     repeat_test_sample_start();
-    do_work(data, a, b, c);
+    //do_work(data, a, b, c);
+    do_work_64(data, a, b, c);
     repeat_test_sample_end();
   }
 
