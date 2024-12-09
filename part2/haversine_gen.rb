@@ -29,10 +29,10 @@ def haversine_distance(pair)
   EarthRadius * c
 end
 
-count = ARGV.fetch(0, 10).to_i
+count = ARGV.fetch(0, 1000000).to_i
 
 point_file = File.open('points.json', 'w')
-answer_file = File.open('haversine.f64', 'w')
+answer_file = File.open('haversine.f64', 'wb')
 
 total = 0
 point_file.puts '{ "pairs": ['
@@ -46,6 +46,7 @@ count.times do |n|
   answer_file.write([distance].pack('d'))
   total += distance
 end
+answer_file.write([total / count].pack('d'))
 point_file.puts ']}'
 
 average = total / count
