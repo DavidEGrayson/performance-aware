@@ -1,4 +1,5 @@
 listing*
+*.exe
 *.pdf
 haversine.f64
 points.json
